@@ -1,0 +1,42 @@
+{
+  "2021 (Bull Market)": {
+    "Series A": {
+      "liquidation_multiple": 1.0,
+      "participation": false,
+      "participation_cap": 0,
+      "dilution": 0.20
+    },
+    "Series B": {
+      "liquidation_multiple": 1.0,
+      "participation": false,
+      "participation_cap": 0,
+      "dilution": 0.15
+    },
+    "Series C": {
+      "liquidation_multiple": 1.0,
+      "participation": false,
+      "participation_cap": 0,
+      "dilution": 0.10
+    }
+  },
+  "2024 (Bear Market)": {
+    "Series A": {
+      "liquidation_multiple": 1.5,
+      "participation": true,
+      "participation_cap": 3.0,
+      "dilution": 0.25
+    },
+    "Series B": {
+      "liquidation_multiple": 2.0,
+      "participation": true,
+      "participation_cap": 2.0,
+      "dilution": 0.20
+    },
+    "Series C": {
+      "liquidation_multiple": 2.5,
+      "participation": true,
+      "participation_cap": 2.0,
+      "dilution": 0.15
+    }
+  }
+}
