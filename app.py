@@ -6,7 +6,7 @@ from calculation_engine import calculate_payout, ShareClass, UserEquity
 
 # --- 1. Global Configuration & CSS Styling (UI Polish) ---
 st.set_page_config(
-    page_title="Equity Reality Check",
+    page_title="True option value calculation model",
     page_icon="💸",
     layout="wide"
 )
@@ -112,7 +112,7 @@ breakeven_val = pref_total + (strike_price * diluted_total_shares)
 
 # --- 5. Main Dashboard Interface ---
 
-st.title("💸 Equity Reality Check")
+st.title("💸 True option value calculation model")
 st.markdown("### The true value of your stock options")
 st.markdown("Use this tool to verify if your options are worth anything under different exit scenarios.")
 
