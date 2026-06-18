@@ -1,0 +1,11 @@
+# Dark theme — matches the app's CSS and the plotly_dark charts (consistent fintech look).
+[theme]
+base = "dark"
+primaryColor = "#00cc96"
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#161a23"
+textColor = "#e6e6e6"
+font = "sans serif"
+
+[server]
+headless = true

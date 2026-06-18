@@ -1,0 +1,46 @@
+{
+  "_meta": {
+    "description": "Market archetypes for startup financing terms, keyed by market regime. Used to fill defaults when an employee does not know the exact cap-table terms. Every figure is a market median or a documented risk-scenario value, NOT a guarantee about any specific company. Provenance: see data/sources.md.",
+    "dilution_note": "dilution_per_round = median primary dilution sold to investors in that round (employee shares are diluted alongside). Carta medians, 2024-2025.",
+    "investor_ownership_note": "investor_ownership_pct = cumulative as-converted ownership held by preferred investors by that stage; drives conversion/participation math in Simple mode. Approximate, from typical post-Series-A/B/C cap tables.",
+    "last_reviewed": "2026-06"
+  },
+
+  "2021_hot_market": {
+    "label": "2021 — Hot market (founder-friendly terms)",
+    "liquidation_multiple": 1.0,
+    "participating": false,
+    "participation_cap": null,
+    "dilution_per_round": { "Series A": 0.20, "Series B": 0.15, "Series C": 0.12 },
+    "investor_ownership_pct": { "Series A": 0.22, "Series B": 0.38, "Series C": 0.48 },
+    "note": "Peak-market financings: clean 1x non-participating preferred was near-universal; the value-destruction risk comes mainly from over-raising and dilution, not from structure."
+  },
+
+  "2025_market_standard": {
+    "label": "2025 — Market standard (clean terms, current medians)",
+    "liquidation_multiple": 1.0,
+    "participating": false,
+    "participation_cap": null,
+    "dilution_per_round": { "Series A": 0.18, "Series B": 0.13, "Series C": 0.16 },
+    "investor_ownership_pct": { "Series A": 0.22, "Series B": 0.40, "Series C": 0.50 },
+    "note": "The base case for a healthy priced round today: 1x non-participating preferred. Carta medians show per-round dilution drifting DOWN over 2023-2025 (companies selling smaller slices)."
+  },
+
+  "structured_downround": {
+    "label": "Structured / down round (risk scenario, NOT the median)",
+    "liquidation_multiple": 1.5,
+    "participating": true,
+    "participation_cap": 2.0,
+    "dilution_per_round": { "Series A": 0.25, "Series B": 0.25, "Series C": 0.30 },
+    "investor_ownership_pct": { "Series A": 0.28, "Series B": 0.45, "Series C": 0.55 },
+    "note": "Illustrative downside, modeled on the rise of investor-protective 'structured' terms in 2022-2024 down markets: senior and >1x preferences, participation with caps, pay-to-play. This is the tail the tool exists to expose, not a prediction for your company."
+  },
+
+  "_exit_outcomes": {
+    "_calibration": "Exit-value distribution presets (multiple of the last post-money valuation V0). The 'Series A' preset is FIT to Correlation Ventures: ~65% of outcomes below 1x and ~4% above 10x. Other stages are directional adjustments for the documented decline in failure rate at later stages (Series A->B ~35% fail; Series B+ failure drops sharply). Each preset is a lognormal-survivor + failure-mass mixture; see tov/montecarlo.py.",
+    "Seed":     { "p_fail": 0.58, "survivor_median_multiple": 1.4, "sigma": 1.40, "fail_ceiling": 0.25 },
+    "Series A": { "p_fail": 0.45, "survivor_median_multiple": 1.5, "sigma": 1.30, "fail_ceiling": 0.30 },
+    "Series B": { "p_fail": 0.35, "survivor_median_multiple": 1.7, "sigma": 1.20, "fail_ceiling": 0.35 },
+    "Series C": { "p_fail": 0.25, "survivor_median_multiple": 1.6, "sigma": 1.10, "fail_ceiling": 0.40 }
+  }
+}

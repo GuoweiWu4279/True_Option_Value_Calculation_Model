@@ -1,57 +1,109 @@
 # True Option Value Calculation Model (2025)
 
-This project presents an interactive, web-based equity valuation model built in Python (Streamlit), designed to simulate complex startup exit scenarios. Unlike traditional calculators that rely solely on percentage ownership, this tool visualizes the impact of capital structure—specifically **Liquidation Preferences** and **Dilution**—on employee payout outcomes.
+An interactive, web-based equity valuation model built in Python (Streamlit) that simulates complex
+startup exit scenarios. Unlike traditional calculators that rely solely on percentage ownership, this
+tool runs each exit through the full **liquidation waterfall** (preferences, seniority, conversion,
+participation), over a **probability distribution** of outcomes, **net of dilution and federal + state
+tax** — and reports the *expected value*, the *probability of zero*, and the *downside*, not a single
+optimistic point.
 
-The model bridges the gap between theoretical offer letter numbers and actual realized value, serving as a dynamic tool for risk assessment under different market conditions (e.g., Standard vs. Distressed rounds).
+The model bridges the gap between the theoretical offer-letter number and actual realized value,
+serving as a dynamic tool for risk assessment under different market conditions. A full worked example
+is in **[CASE_STUDY.md](CASE_STUDY.md)**.
 
 ###  Model Objective
 
-* **Visualize Risk Exposure:** Identify the "Zone of Zero" where common stock options are underwater due to investor liquidation preferences, even at non-zero exit valuations.
-* **Analyze Waterfall Logic:** Simulate the hierarchical distribution of proceeds (Waterfall Analysis), prioritizing Preferred Stock repayment before Common Stock participation.
-* **Assess Break-even Thresholds:** Calculate the precise exit valuation required for employees to realize a positive net profit after accounting for strike prices and investor hurdles.
-* **Scenario Planning:** Compare payout outcomes under "Market Standard" terms (1x Non-Participating) versus "Distressed" terms (Multiple Liquidation Preferences).
+* **Value, not a point estimate:** Compute the probability-weighted expected value of an option grant
+  across a calibrated distribution of exits — most of which are failure — rather than its payoff at one
+  hand-picked exit.
+* **Visualize Risk Exposure:** Identify the "Zone of Zero" where common options are underwater due to
+  investor liquidation preferences, even at a non-zero exit valuation.
+* **Analyze Waterfall Logic:** Simulate the hierarchical distribution of proceeds — senior preferred,
+  then junior preferred, then common — including the non-participating *conversion* decision and the
+  participating "double dip" with caps.
+* **Quantify the tax drag:** Model the AMT cash bill at ISO exercise (federal **and** California), the
+  ordinary-vs-LTCG split at sale, and the QSBS (§1202) exclusion.
+* **Assess Break-even Thresholds:** Calculate the precise exit valuation required for a positive net
+  payout after strike, the preference hurdle, and dilution.
 
 ###  Key Takeaways
 
-* **Structure Over Percentage:** A specific ownership percentage (e.g., 0.1%) is meaningless without context; the Liquidation Preference creates a "hurdle" that must be cleared before ownership percentage applies.
-* **The "Zone of Zero":** In downside scenarios with high liquidation multiples (e.g., 2x), employees may receive $0 payout even if the company sells for millions of dollars.
-* **Dilution Impact:** Future financing rounds (Series B, C, D) significantly impact final payouts. The model demonstrates how a 20% dilution per round can reduce effective ownership despite a static share count.
-* **Strike Price Sensitivity:** The model highlights how the exercise cost (Strike Price) acts as a secondary leverage point, further increasing the break-even valuation requirement.
+* **Structure over percentage:** "1% of the company" is meaningless without the terms; a liquidation
+  preference is a hurdle that must clear before ownership % applies.
+* **The mean flatters; the median tells the truth:** the expected value can sit near the offer-letter
+  number purely on the strength of a thin upside tail, while the *median* outcome — what a typical,
+  undiversified employee actually receives — is an order of magnitude lower.
+* **The "Zone of Zero":** with high or participating preferences, employees can net **$0** even when the
+  company sells for millions.
+* **The AMT trap:** exercising ISOs and holding can create a cash tax bill *before any liquidity* —
+  sometimes larger than the stock's eventual worth.
+* **The California QSBS gap:** a 100% *federal* QSBS exclusion still leaves a large *state* bill, because
+  California does not conform.
 
 ###  Model Structure
 
-The application is built using a modular Python architecture:
+A modular, tested Python package (`tov/`) separated from the UI:
 
-* **Frontend (Streamlit):** Interactive sidebar for dynamic user inputs, including option grants, strike prices, and estimated future dilution.
-* **Calculation Engine:** A dedicated backend class (`calculation_engine.py`) that processes the payment waterfall hierarchy, handling logic for:
-    * Liquidation Preferences (1x, 2x, etc.)
-    * Participation Rights (Participating vs. Non-Participating)
-    * Common Stock Pro-rata Distribution
-* **Visualization (Plotly):** Renders dynamic area charts to visualize the Net Profit profile across a range of simulated exit valuations.
-* **Knowledge Base:** Integrated educational module explaining core VC concepts like the "Option Pool Shuffle" and "Liquidation Overhang."
+* **`tov/waterfall.py`** — the engine: `CapTable` / `PreferredRound` and a distribution solver handling
+  seniority stacking, the non-participating conversion option, and participating preferred with caps,
+  resolved via best-response equilibrium.
+* **`tov/montecarlo.py`** — Monte Carlo over a bimodal exit distribution → expected value, P(zero),
+  P10/P50/P90, and CVaR.
+* **`tov/tax.py`** — 2025 federal + California estimators: AMT, ordinary income, LTCG, and QSBS §1202.
+* **`tov/reverse.py`** — reverse solvers (offer-letter fragments → fully-diluted shares / ownership).
+* **`data/`** — market archetypes and the calibrated exit-distribution presets, with **`sources.md`**
+  documenting the provenance of every constant.
+* **`app.py`** — the Streamlit UI; every control feeds a number that is actually computed.
+* **Visualization (Plotly):** outcome-probability bands and the true-payoff-vs-offer-letter curve.
 
 ###  Key Assumptions (Base Methodology)
 
-* **Waterfall Hierarchy:** The model assumes a standard priority stack where Preferred Stock investors are paid out fully before Common Stock shareholders.
-* **Dilution Logic:** Uses a "Fully Diluted" approach where the user's effective ownership stake is adjusted based on a customizable dilution factor (0-80%) to simulate future fundraising.
-* **Market Benchmarks:** Default scenarios are derived from aggregated VC market data (e.g., Fenwick & West surveys), simulating typical terms for Series A/B rounds.
-* **Taxation:** All outputs are calculated on a **Pre-tax** basis (Gross Payout minus Exercise Cost).
+* **Waterfall hierarchy:** proceeds flow senior → junior preferred → common; non-participating preferred
+  takes the greater of its preference or as-converted value.
+* **Dilution:** a fully-diluted approach where future rounds are modeled as new-share issuance.
+* **Market benchmarks:** default terms and dilution medians are drawn from Carta / Fenwick data; the
+  exit distribution is calibrated to published venture outcomes (Correlation Ventures: ~65% below 1×,
+  ~4% above 10×).
+* **Taxation:** 2025 federal + California estimates (AMT, ordinary, LTCG, QSBS).
 
 ###  Model Scope & Limitations
 
-This model intentionally excludes:
-* Complex multi-layered cap tables with varying seniority per share class (simplified to Aggregate Investors vs. Common).
-* Tax implications such as AMT (Alternative Minimum Tax), NSO vs. ISO, or capital gains tax.
-* Granular vesting schedule modeling (assumes fully vested or calculates based on total grant).
-* This tool is designed for **educational and simulation purposes** only and does not constitute investment or legal advice.
+* Federal + California only; other states are treated as no-state-tax. No AMT-credit (MTC) carryforward
+  recovery, no ISO $100k limit, no payroll tax on the NSO spread.
+* Simple mode blends the preference stack into one aggregated round; **Advanced mode** models true
+  per-round seniority and terms.
+* The exit distribution is a calibrated **model, not a forecast** of any one company.
+* All-cash, single-exit assumption: ignores escrow/earnouts, secondary sales, venture debt, and
+  management carve-outs (all of which only make common *worse*).
+* **Educational and simulation purposes only** — not investment, tax, or legal advice.
+
+###  Validation (why the numbers are trustworthy)
+
+* The waterfall is checked against **hand-computed golden cases** — conversion crossover, the
+  participation double-dip, caps (binding *and* converting), and stacked seniority.
+* The Monte Carlo integrator is validated against a **closed-form expectation**.
+* The calibrated distribution is asserted to **reproduce the published venture-outcome shape**.
+* **34 golden tests** gate the whole engine. Run them first.
+
+###  Run
+
+```bash
+pip install -r requirements.txt
+python tests/run_all.py        # 34 golden tests — run this first
+streamlit run app.py
+```
 
 ###  Files
 
-* `app.py` – Main application script containing UI logic and visualization code.
-* `calculation_engine.py` – Core mathematical logic for the waterfall distribution.
-* `benchmarks.json` – Configuration file storing market standard and distressed term sheet parameters.
-* `requirements.txt` – List of Python dependencies (Streamlit, Plotly, Pandas).
+* `app.py` — Streamlit UI (inputs, charts, narrative).
+* `tov/` — the tested calculation engine (waterfall, Monte Carlo, tax, reverse solvers).
+* `data/benchmarks.json` + `data/sources.md` — market archetypes / calibrated presets + provenance.
+* `tests/` — golden-test suite (`python tests/run_all.py`).
+* `CASE_STUDY.md` — a full worked example with reproducible numbers.
+* `archive/` — the original MVP engine, kept for history.
+* `requirements.txt` — Python dependencies (Streamlit, NumPy, Plotly).
 
 ###  Author
 
-Built by **Guowei (Gary) Wu** as a portfolio project demonstrating Python financial modeling, SaaS equity analysis, and full-stack data application development.
+Built by **Guowei (Gary) Wu** as a portfolio project demonstrating Python financial modeling, SaaS
+equity analysis, and full-stack data application development.
